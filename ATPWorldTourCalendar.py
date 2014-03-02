@@ -24,7 +24,7 @@ def gettournamentdetails(url):
             listitems = div.find_all('li')
             for li in listitems:
                 if 'Date:' in li.text:
-                    return li.text
+                    return dict(duration=li.text, desctext=div.text)
     return None
 
 # function returning the parsed tournament row
@@ -50,7 +50,8 @@ def gettournament(cells):
                       startdate=tournamentstartdate.strip(),
                       enddate=tournamentstartdate,
                       title=tournamenttitle.strip(),
-                      link=completelink)
+                      link=completelink,
+                      description='')
     return tournament
 
 
@@ -87,12 +88,15 @@ for item in data:
     if (i % 10 == 0):
         print('Loaded specific informations for {}/{} tournaments'.format(i, numel))
     z = item['link']
-    duration = gettournamentdetails(z)
+    details = gettournamentdetails(z)
+
+    duration = details['duration']
 
     match = re.findall(r"\b([0-9]{1,2}).([0-9]{1,2}).([0-9]{4})\b", duration)
     if (len(match) == 2):
         item['startdate'] = match[0]
         item['enddate'] = match[1]
+    item['description'] = details['desctext']
     i = i + 1
 
 
@@ -120,6 +124,7 @@ for item in data:
                         int(time.strftime('%H')),
                         int(time.strftime('%M')),
                         int(time.strftime('%S')), tzinfo=pytz.UTC))
+    event.add('description', item['description'].strip())
 
     event.add('priority',5)
 
